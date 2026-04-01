@@ -147,7 +147,7 @@ export default function App() {
   return (
     <>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');*{margin:0;padding:0;box-sizing:border-box}@keyframes spin{to{transform:rotate(360deg)}}@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}body{font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased;background:#f0f2f5;color:#1e293b}input,select{-webkit-appearance:none}table{border-collapse:collapse}@media(min-width:768px){.sb{display:flex!important}.bn{display:none!important}.mh{display:none!important}.dh{display:flex!important}.ct{margin-left:220px!important;max-width:none!important;padding:24px!important}}`}</style>
-      <div style={{ minHeight: '100vh', background: '#f8fafc', fontFamily: "'Inter', system-ui, sans-serif", paddingBottom: 72 }}>
+      <div style={{ minHeight: '100vh', background: '#f0f2f5', fontFamily: "'Inter', system-ui, sans-serif", paddingBottom: 72 }}>
 
         {/* Sidebar (Desktop) */}
         <div className="sb" style={{ display: 'none', width: 220, background: '#1e1b4b', color: 'white', flexDirection: 'column', flexShrink: 0, position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 40 }}>
@@ -191,9 +191,15 @@ export default function App() {
         </header>
 
         {/* Desktop Header */}
-        <header className="dh" style={{ display: 'none', background: 'white', padding: '12px 24px', borderBottom: '1px solid #e5e7eb', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 style={{ fontSize: 15, fontWeight: 700 }}>{({ home: 'Dashboard', journal: 'Jurnal Umum', neraca: 'Neraca Saldo', laporan: 'Laporan Laba Rugi', hutang: 'Hutang & Piutang' } as Record<string, string>)[tab]}</h2>
-          <div style={{ fontSize: 12, color: '#9ca3af' }}>{new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</div>
+        <header className="dh" style={{ display: 'none', background: 'white', padding: '0 24px', borderBottom: '1px solid #e2e8f0', justifyContent: 'space-between', alignItems: 'center', height: 56 }}>
+          <div>
+            <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 500, marginBottom: 2 }}>Akuntansi</div>
+            <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1e293b' }}>{({ home: 'Dashboard', journal: 'Jurnal Umum', neraca: 'Neraca Saldo', laporan: 'Laporan Laba Rugi', hutang: 'Hutang & Piutang' } as Record<string, string>)[tab]}</h2>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <div style={{ fontSize: 12, color: '#94a3b8' }}>{new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</div>
+            <div style={{ width: 32, height: 32, background: '#6366f1', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 13, fontWeight: 700 }}>A</div>
+          </div>
         </header>
 
         <main className="ct" style={{ padding: 16 }}>
