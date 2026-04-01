@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 
 interface Account { id: string; code: string; name: string; type: 'aset' | 'kewajiban' | 'modal' | 'pendapatan' | 'beban'; }
 interface JournalEntry { id: number; date: string; ref: string; desc: string; debit: { account: string; amount: number }[]; credit: { account: string; amount: number }[]; }
@@ -32,8 +33,6 @@ const TYPE_COLOR: Record<string, string> = { aset: '#3b82f6', kewajiban: '#ef444
 
 function rp(n: number) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n); }
 function short(n: number) { if (Math.abs(n) >= 1e6) return (n / 1e6).toFixed(1).replace('.0', '') + ' Jt'; if (Math.abs(n) >= 1e3) return (n / 1e3).toFixed(0) + ' Rb'; return n.toLocaleString('id-ID'); }
-function load<T>(k: string, d: T): T { if (typeof window === 'undefined') return d; const v = localStorage.getItem('aris_' + k); return v ? JSON.parse(v) : d; }
-function save(k: string, v: unknown) { localStorage.setItem('aris_' + k, JSON.stringify(v)); }
 
 type Tab = 'home' | 'journal' | 'neraca' | 'laporan' | 'hutang';
 
@@ -60,14 +59,36 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   useEffect(() => {
-    setJournal(load<JournalEntry[]>('journal', []));
-    setDebts(load<Debt[]>('debts', []));
-    setReady(true);
+    async function loadData() {
+      try {
+        const { data: jData } = await supabase.from('journal_entries').select('*').order('id', { ascending: true });
+        const { data: dData } = await supabase.from('debts').select('*').order('id', { ascending: true });
+        if (jData) setJournal(jData.map(r => ({ id: Number(r.id), date: r.date, ref: r.ref, desc: r.desc || '', debit: r.debit, credit: r.credit })));
+        if (dData) setDebts(dData.map(r => ({ id: Number(r.id), type: r.type as 'hutang'|'piutang', name: r.name, amount: Number(r.amount), paid: Number(r.paid), dueDate: r.due_date || '', desc: r.desc || '', status: r.status as 'active'|'paid' })));
+      } catch { console.log('Supabase error'); }
+      setReady(true);
+    }
+    loadData();
   }, []);
 
-  function reload() { setJournal(load<JournalEntry[]>('journal', [])); setDebts(load<Debt[]>('debts', [])); }
-  function saveJournal(j: JournalEntry[]) { setJournal(j); save('journal', j); }
-  function saveDebts(d: Debt[]) { setDebts(d); save('debts', d); }
+  function reload() {
+    supabase.from('journal_entries').select('*').order('id', { ascending: true }).then(({ data }) => {
+      if (data) setJournal(data.map(r => ({ id: Number(r.id), date: r.date, ref: r.ref, desc: r.desc || '', debit: r.debit, credit: r.credit })));
+    });
+    supabase.from('debts').select('*').order('id', { ascending: true }).then(({ data }) => {
+      if (data) setDebts(data.map(r => ({ id: Number(r.id), type: r.type as 'hutang'|'piutang', name: r.name, amount: Number(r.amount), paid: Number(r.paid), dueDate: r.due_date || '', desc: r.desc || '', status: r.status as 'active'|'paid' })));
+    });
+  }
+
+  async function saveJournal(j: JournalEntry[]) {
+    setJournal(j);
+    await supabase.from('journal_entries').upsert(j.map(e => ({ id: e.id, date: e.date, ref: e.ref, desc: e.desc, debit: e.debit, credit: e.credit })));
+  }
+
+  async function saveDebts(d: Debt[]) {
+    setDebts(d);
+    await supabase.from('debts').upsert(d.map(e => ({ id: e.id, type: e.type, name: e.name, amount: e.amount, paid: e.paid, due_date: e.dueDate, desc: e.desc, status: e.status })));
+  }
 
   function getBal(name: string) { let b = 0; journal.forEach(e => { e.debit.forEach(d => { if (d.account === name) b += d.amount; }); e.credit.forEach(c => { if (c.account === name) b -= c.amount; }); }); return b; }
 
@@ -84,17 +105,18 @@ export default function App() {
   const pendapatan = coa.filter(a => a.type === 'pendapatan').map(a => ({ ...a, bal: getBal(a.name) })).filter(a => a.bal !== 0);
   const beban = coa.filter(a => a.type === 'beban').map(a => ({ ...a, bal: getBal(a.name) })).filter(a => a.bal !== 0);
 
-  function deleteJournal(id: number) {
+  async function deleteJournal(id: number) {
     if (confirm('Hapus entri jurnal ini?')) {
       const updated = journal.filter(j => j.id !== id);
-      saveJournal(updated);
+      setJournal(updated);
+      await supabase.from('journal_entries').delete().eq('id', id);
     }
   }
 
-  function resetAll() {
+  async function resetAll() {
     if (confirm('Hapus SEMUA data? Ini tidak bisa dibatalkan!')) {
-      localStorage.removeItem('aris_journal');
-      localStorage.removeItem('aris_debts');
+      await supabase.from('journal_entries').delete().neq('id', 0);
+      await supabase.from('debts').delete().neq('id', 0);
       setJournal([]);
       setDebts([]);
     }
