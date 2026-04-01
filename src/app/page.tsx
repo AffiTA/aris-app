@@ -146,21 +146,42 @@ export default function App() {
 
   return (
     <>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');*{margin:0;padding:0;box-sizing:border-box}@keyframes spin{to{transform:rotate(360deg)}}body{font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased;background:#f8fafc;color:#1f2937}@media(min-width:768px){.bn{display:none!important}.ct{max-width:720px;margin:0 auto}}`}</style>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');*{margin:0;padding:0;box-sizing:border-box}@keyframes spin{to{transform:rotate(360deg)}}body{font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased;background:#f8fafc;color:#1f2937}@media(min-width:768px){.sb{display:flex!important}.bn{display:none!important}.mh{display:none!important}.dh{display:flex!important}.ct{margin-left:220px!important;max-width:none!important}}`}</style>
       <div style={{ minHeight: '100vh', background: '#f8fafc', fontFamily: "'Inter', system-ui, sans-serif", paddingBottom: 72 }}>
 
-        {/* Header */}
-        <header style={{ background: 'white', padding: '14px 16px', borderBottom: '1px solid #f1f5f9', position: 'sticky', top: 0, zIndex: 30 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div style={{ width: 32, height: 32, background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 14, color: 'white' }}>A</div>
-              <div>
-                <div style={{ fontWeight: 800, fontSize: 16, letterSpacing: '-0.5px' }}>ARIS</div>
-              </div>
-            </div>
-            <button onClick={exportExcel} style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: 11, fontWeight: 600, color: '#6366f1', cursor: 'pointer', marginRight: 6 }}>Export</button>
+        {/* Sidebar (Desktop) */}
+        <div className="sb" style={{ display: 'none', width: 220, background: '#111827', color: 'white', flexDirection: 'column', flexShrink: 0, position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 40 }}>
+          <div style={{ padding: '20px 16px', borderBottom: '1px solid #1f2937', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 32, height: 32, background: '#6366f1', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 14 }}>A</div>
+            <div><div style={{ fontWeight: 800, fontSize: 15 }}>ARIS</div><div style={{ fontSize: 9, color: '#6b7280' }}>SISTEM AKUNTANSI</div></div>
+          </div>
+          <nav style={{ padding: '12px 8px', flex: 1 }}>
+            {([['home', 'Dashboard'], ['journal', 'Jurnal Umum'], ['neraca', 'Neraca Saldo'], ['laporan', 'Laporan Laba Rugi'], ['hutang', 'Hutang & Piutang']] as [Tab, string][]).map(([t, l]) => (
+              <button key={t} onClick={() => { reload(); setTab(t); }} style={{ width: '100%', textAlign: 'left', background: tab === t ? '#1f2937' : 'transparent', color: tab === t ? 'white' : '#9ca3af', border: 'none', borderRadius: 8, padding: '10px 12px', cursor: 'pointer', fontSize: 13, fontWeight: tab === t ? 600 : 400, marginBottom: 2, display: 'block' }}>{l}</button>
+            ))}
+          </nav>
+          <div style={{ padding: '12px 8px', borderTop: '1px solid #1f2937' }}>
+            <button onClick={exportExcel} style={{ width: '100%', background: '#1f2937', color: '#9ca3af', border: '1px solid #374151', borderRadius: 8, padding: '8px', cursor: 'pointer', fontSize: 12, fontWeight: 600, marginBottom: 6 }}>Export Excel</button>
+            <button onClick={resetAll} style={{ width: '100%', background: 'transparent', color: '#ef4444', border: '1px solid #374151', borderRadius: 8, padding: '8px', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>Reset Data</button>
+          </div>
+        </div>
+
+        {/* Mobile Header */}
+        <header className="mh" style={{ background: 'white', padding: '14px 16px', borderBottom: '1px solid #f1f5f9', position: 'sticky', top: 0, zIndex: 30, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ width: 32, height: 32, background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 14, color: 'white' }}>A</div>
+            <div style={{ fontWeight: 800, fontSize: 16 }}>ARIS</div>
+          </div>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button onClick={exportExcel} style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: 11, fontWeight: 600, color: '#6366f1', cursor: 'pointer' }}>Export</button>
             <button onClick={resetAll} style={{ background: '#fef2f2', border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: 11, fontWeight: 600, color: '#ef4444', cursor: 'pointer' }}>Reset</button>
           </div>
+        </header>
+
+        {/* Desktop Header */}
+        <header className="dh" style={{ display: 'none', background: 'white', padding: '12px 24px', borderBottom: '1px solid #e5e7eb', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h2 style={{ fontSize: 15, fontWeight: 700 }}>{({ home: 'Dashboard', journal: 'Jurnal Umum', neraca: 'Neraca Saldo', laporan: 'Laporan Laba Rugi', hutang: 'Hutang & Piutang' } as Record<string, string>)[tab]}</h2>
+          <div style={{ fontSize: 12, color: '#9ca3af' }}>{new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</div>
         </header>
 
         <main className="ct" style={{ padding: 16 }}>
