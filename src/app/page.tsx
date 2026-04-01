@@ -146,23 +146,35 @@ export default function App() {
 
   return (
     <>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');*{margin:0;padding:0;box-sizing:border-box}@keyframes spin{to{transform:rotate(360deg)}}body{font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased;background:#f8fafc;color:#1f2937}@media(min-width:768px){.sb{display:flex!important}.bn{display:none!important}.mh{display:none!important}.dh{display:flex!important}.ct{margin-left:220px!important;max-width:none!important}}`}</style>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');*{margin:0;padding:0;box-sizing:border-box}@keyframes spin{to{transform:rotate(360deg)}}@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}body{font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased;background:#f0f2f5;color:#1e293b}input,select{-webkit-appearance:none}table{border-collapse:collapse}@media(min-width:768px){.sb{display:flex!important}.bn{display:none!important}.mh{display:none!important}.dh{display:flex!important}.ct{margin-left:220px!important;max-width:none!important;padding:24px!important}}`}</style>
       <div style={{ minHeight: '100vh', background: '#f8fafc', fontFamily: "'Inter', system-ui, sans-serif", paddingBottom: 72 }}>
 
         {/* Sidebar (Desktop) */}
-        <div className="sb" style={{ display: 'none', width: 220, background: '#111827', color: 'white', flexDirection: 'column', flexShrink: 0, position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 40 }}>
-          <div style={{ padding: '20px 16px', borderBottom: '1px solid #1f2937', display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 32, height: 32, background: '#6366f1', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 14 }}>A</div>
-            <div><div style={{ fontWeight: 800, fontSize: 15 }}>ARIS</div><div style={{ fontSize: 9, color: '#6b7280' }}>SISTEM AKUNTANSI</div></div>
+        <div className="sb" style={{ display: 'none', width: 220, background: '#1e1b4b', color: 'white', flexDirection: 'column', flexShrink: 0, position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 40 }}>
+          <div style={{ padding: '24px 20px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ width: 36, height: 36, background: 'linear-gradient(135deg, #818cf8, #6366f1)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 16, boxShadow: '0 2px 8px rgba(99,102,241,0.4)' }}>A</div>
+            <div><div style={{ fontWeight: 800, fontSize: 16, letterSpacing: '-0.3px' }}>ARIS</div><div style={{ fontSize: 9, color: '#a5b4fc', letterSpacing: '1px', fontWeight: 500 }}>AKUNTANSI</div></div>
           </div>
-          <nav style={{ padding: '12px 8px', flex: 1 }}>
-            {([['home', 'Dashboard'], ['journal', 'Jurnal Umum'], ['neraca', 'Neraca Saldo'], ['laporan', 'Laporan Laba Rugi'], ['hutang', 'Hutang & Piutang']] as [Tab, string][]).map(([t, l]) => (
-              <button key={t} onClick={() => { reload(); setTab(t); }} style={{ width: '100%', textAlign: 'left', background: tab === t ? '#1f2937' : 'transparent', color: tab === t ? 'white' : '#9ca3af', border: 'none', borderRadius: 8, padding: '10px 12px', cursor: 'pointer', fontSize: 13, fontWeight: tab === t ? 600 : 400, marginBottom: 2, display: 'block' }}>{l}</button>
+          <nav style={{ padding: '8px 12px', flex: 1 }}>
+            {([
+              { tab: 'home' as Tab, label: 'Dashboard', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1h-2z' },
+              { tab: 'journal' as Tab, label: 'Jurnal Umum', icon: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' },
+              { tab: 'neraca' as Tab, label: 'Neraca Saldo', icon: 'M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
+              { tab: 'laporan' as Tab, label: 'Laba Rugi', icon: 'M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z' },
+              { tab: 'hutang' as Tab, label: 'Hutang & Piutang', icon: 'M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z' },
+            ]).map(n => (
+              <button key={n.tab} onClick={() => { reload(); setTab(n.tab); }} style={{ width: '100%', textAlign: 'left', background: tab === n.tab ? 'rgba(255,255,255,0.12)' : 'transparent', color: tab === n.tab ? 'white' : '#a5b4fc', border: 'none', borderRadius: 8, padding: '10px 12px', cursor: 'pointer', fontSize: 13, fontWeight: tab === n.tab ? 600 : 500, marginBottom: 2, display: 'flex', alignItems: 'center', gap: 10, borderLeft: tab === n.tab ? '3px solid #818cf8' : '3px solid transparent' }}>
+                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8"><path strokeLinecap="round" strokeLinejoin="round" d={n.icon} /></svg>
+                {n.label}
+              </button>
             ))}
           </nav>
-          <div style={{ padding: '12px 8px', borderTop: '1px solid #1f2937' }}>
-            <button onClick={exportExcel} style={{ width: '100%', background: '#1f2937', color: '#9ca3af', border: '1px solid #374151', borderRadius: 8, padding: '8px', cursor: 'pointer', fontSize: 12, fontWeight: 600, marginBottom: 6 }}>Export Excel</button>
-            <button onClick={resetAll} style={{ width: '100%', background: 'transparent', color: '#ef4444', border: '1px solid #374151', borderRadius: 8, padding: '8px', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>Reset Data</button>
+          <div style={{ padding: '12px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+            <button onClick={exportExcel} style={{ width: '100%', background: 'rgba(255,255,255,0.08)', color: '#a5b4fc', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, padding: '9px 12px', cursor: 'pointer', fontSize: 12, fontWeight: 600, marginBottom: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+              Export Excel
+            </button>
+            <button onClick={resetAll} style={{ width: '100%', background: 'transparent', color: '#f87171', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, padding: '9px 12px', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>Reset Data</button>
           </div>
         </div>
 
@@ -188,41 +200,53 @@ export default function App() {
           {/* HOME */}
           {tab === 'home' && <div>
             {/* KPI Cards */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, marginBottom: 20 }}>
               {[
-                { label: 'Aset', val: totalAset, col: '#3b82f6' },
-                { label: 'Kewajiban', val: totalKew, col: '#ef4444' },
-                { label: 'Modal', val: totalModal, col: '#8b5cf6' },
-                { label: 'Laba', val: laba, col: laba >= 0 ? '#10b981' : '#ef4444' },
+                { label: 'Total Aset', val: totalAset, bg: '#eff6ff', border: '#bfdbfe', col: '#1d4ed8', icon: 'M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z' },
+                { label: 'Kewajiban', val: totalKew, bg: '#fef2f2', border: '#fecaca', col: '#dc2626', icon: 'M13 17h8m0 0V9m0 8l-8-8-4 4-6-6' },
+                { label: 'Modal', val: totalModal, bg: '#f5f3ff', border: '#ddd6fe', col: '#7c3aed', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
+                { label: 'Laba/Rugi', val: laba, bg: laba >= 0 ? '#ecfdf5' : '#fef2f2', border: laba >= 0 ? '#a7f3d0' : '#fecaca', col: laba >= 0 ? '#059669' : '#dc2626', icon: 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6' },
               ].map((k, i) => (
-                <div key={i} style={{ background: 'white', borderRadius: 12, padding: 14, border: '1px solid #f1f5f9' }}>
-                  <div style={{ fontSize: 10, color: '#9ca3af', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>{k.label}</div>
-                  <div style={{ fontSize: 18, fontWeight: 800, color: k.col }}>{rp(k.val)}</div>
+                <div key={i} style={{ background: k.bg, borderRadius: 12, padding: 16, border: '1px solid ' + k.border, animation: 'fadeIn 0.3s ease ' + (i * 0.05) + 's both' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                    <span style={{ fontSize: 12, color: '#64748b', fontWeight: 600 }}>{k.label}</span>
+                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke={k.col} strokeWidth="1.8"><path strokeLinecap="round" strokeLinejoin="round" d={k.icon} /></svg>
+                  </div>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: k.col, letterSpacing: '-0.5px' }}>{rp(k.val)}</div>
                 </div>
               ))}
             </div>
 
             {/* Quick Actions */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
-              <button onClick={() => setModal('journal')} style={{ background: '#6366f1', color: 'white', border: 'none', borderRadius: 12, padding: 14, fontWeight: 700, fontSize: 14, cursor: 'pointer', boxShadow: '0 2px 8px rgba(99,102,241,0.25)' }}>+ Jurnal</button>
-              <button onClick={() => { setDType('hutang'); setModal('debt'); }} style={{ background: 'white', color: '#1f2937', border: '1.5px solid #e5e7eb', borderRadius: 12, padding: 14, fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>+ Hutang</button>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}>
+              <button onClick={() => setModal('journal')} style={{ background: 'linear-gradient(135deg, #6366f1, #818cf8)', color: 'white', border: 'none', borderRadius: 10, padding: 14, fontWeight: 600, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 2px 8px rgba(99,102,241,0.3)' }}>
+                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
+                Jurnal Baru
+              </button>
+              <button onClick={() => { setDType('hutang'); setModal('debt'); }} style={{ background: 'white', color: '#475569', border: '1px solid #e2e8f0', borderRadius: 10, padding: 14, fontWeight: 600, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#ef4444" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z" /></svg>
+                Tambah Hutang
+              </button>
             </div>
 
             {/* Recent Journal */}
-            <div style={{ background: 'white', borderRadius: 12, border: '1px solid #f1f5f9', overflow: 'hidden' }}>
-              <div style={{ padding: '12px 14px', borderBottom: '1px solid #f1f5f9', fontWeight: 700, fontSize: 13, display: 'flex', justifyContent: 'space-between' }}>
+            <div style={{ background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+              <div style={{ padding: '14px 16px', borderBottom: '1px solid #f1f5f9', fontWeight: 700, fontSize: 14, color: '#1e293b', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span>Jurnal Terakhir</span>
-                <button onClick={() => { reload(); setTab('journal'); }} style={{ background: 'none', border: 'none', color: '#6366f1', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Lihat Semua</button>
+                <button onClick={() => { reload(); setTab('journal'); }} style={{ background: '#eef2ff', border: 'none', color: '#6366f1', fontSize: 12, fontWeight: 600, cursor: 'pointer', padding: '4px 10px', borderRadius: 6 }}>Lihat Semua</button>
               </div>
               {journal.length > 0 ? [...journal].reverse().slice(0, 5).map(j => (
-                <div key={j.id} style={{ padding: '12px 14px', borderBottom: '1px solid #f8fafc', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div key={j.id} style={{ padding: '12px 16px', borderBottom: '1px solid #f8fafc', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
-                    <div style={{ fontSize: 13, fontWeight: 600 }}>{j.desc || j.debit.map(d => d.account).join(', ')}</div>
-                    <div style={{ fontSize: 11, color: '#9ca3af' }}>{j.ref} · {j.date}</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: '#1e293b' }}>{j.desc || j.debit.map(d => d.account).join(', ')}</div>
+                    <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>{j.ref} · {j.date}</div>
                   </div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#1f2937' }}>{short(j.debit.reduce((s, d) => s + d.amount, 0))}</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#1e293b' }}>{short(j.debit.reduce((s, d) => s + d.amount, 0))}</div>
                 </div>
-              )) : <div style={{ padding: 30, textAlign: 'center', color: '#d1d5db', fontSize: 13 }}>Belum ada jurnal</div>}
+              )) : <div style={{ padding: 40, textAlign: 'center' }}>
+                <svg width="40" height="40" fill="none" viewBox="0 0 24 24" stroke="#d1d5db" strokeWidth="1.2"><path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                <div style={{ color: '#94a3b8', fontSize: 13, marginTop: 8 }}>Belum ada jurnal</div>
+              </div>}
             </div>
           </div>}
 
