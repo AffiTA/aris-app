@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, LineChart, Line } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
 
 interface Transaction {
   id: number;
@@ -35,408 +35,347 @@ const CATEGORIES: Category[] = [
   { name: 'Lainnya (Keluar)', type: 'expense', icon: '📤' },
 ];
 
-const COLORS = ['#6366f1', '#22d3ee', '#f59e0b', '#ef4444', '#10b981', '#8b5cf6', '#ec4899', '#3b82f6', '#14b8a6', '#f97316'];
+const COLORS = ['#6366f1', '#06b6d4', '#f59e0b', '#ef4444', '#10b981', '#8b5cf6', '#ec4899', '#3b82f6'];
 
-function fmt(num: number): string {
-  if (num >= 1000000) return (num / 1000000).toFixed(1) + 'jt';
-  if (num >= 1000) return (num / 1000).toFixed(0) + 'rb';
-  return num.toLocaleString('id-ID');
+function formatRp(n: number): string {
+  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n);
 }
 
-function fmtFull(num: number): string {
-  return 'Rp ' + num.toLocaleString('id-ID');
+function formatShort(n: number): string {
+  if (n >= 1000000) return (n / 1000000).toFixed(1).replace('.0', '') + ' Jt';
+  if (n >= 1000) return (n / 1000).toFixed(0) + ' Rb';
+  return n.toString();
 }
 
 function getTx(): Transaction[] {
   if (typeof window === 'undefined') return [];
-  const d = localStorage.getItem('aris_tx');
+  const d = localStorage.getItem('aris_v2');
   return d ? JSON.parse(d) : [];
 }
 
 function saveTx(tx: Transaction[]) {
-  localStorage.setItem('aris_tx', JSON.stringify(tx));
+  localStorage.setItem('aris_v2', JSON.stringify(tx));
 }
 
-function getMonthDays() {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth();
-  const days = new Date(year, month + 1, 0).getDate();
-  const result = [];
-  for (let i = 1; i <= days; i++) {
-    result.push(`${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`);
-  }
-  return result;
-}
-
-export default function ARISDashboard() {
+export default function App() {
   const [tx, setTx] = useState<Transaction[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  const [formType, setFormType] = useState<'income' | 'expense'>('expense');
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'transactions'>('dashboard');
-  const [animateIn, setAnimateIn] = useState(false);
-
-  const month = new Date().toISOString().slice(0, 7);
+  const [ready, setReady] = useState(false);
+  const [modal, setModal] = useState(false);
+  const [tab, setTab] = useState<'home' | 'history'>('home');
+  const [modalType, setModalType] = useState<'income' | 'expense'>('expense');
 
   useEffect(() => {
     setTx(getTx());
-    setLoading(false);
-    setTimeout(() => setAnimateIn(true), 100);
+    setReady(true);
   }, []);
 
-  const monthly = tx.filter(t => t.date.startsWith(month));
-  const income = monthly.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-  const expense = monthly.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
-  const balance = income - expense;
-  const savingsRate = income > 0 ? ((income - expense) / income * 100) : 0;
+  const now = new Date();
+  const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const monthName = now.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+  const month = tx.filter(t => t.date.startsWith(monthStr));
 
-  const expenseCat = CATEGORIES.filter(c => c.type === 'expense').map(c => ({
+  const income = month.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+  const expense = month.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+  const balance = income - expense;
+  const savingsRate = income > 0 ? Math.max(0, ((income - expense) / income) * 100) : 0;
+
+  const expByCat = CATEGORIES.filter(c => c.type === 'expense').map(c => ({
     name: c.name,
     icon: c.icon,
-    value: monthly.filter(t => t.category === c.name && t.type === 'expense').reduce((s, t) => s + t.amount, 0)
+    value: month.filter(t => t.category === c.name).reduce((s, t) => s + t.amount, 0),
   })).filter(c => c.value > 0).sort((a, b) => b.value - a.value);
 
-  const incomeCat = CATEGORIES.filter(c => c.type === 'income').map(c => ({
-    name: c.name,
-    icon: c.icon,
-    value: monthly.filter(t => t.category === c.name && t.type === 'income').reduce((s, t) => s + t.amount, 0)
-  })).filter(c => c.value > 0);
-
-  const allDays = getMonthDays();
-  const dailyData = allDays.map(d => {
-    const dayTx = monthly.filter(t => t.date === d);
+  const days = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const daily = Array.from({ length: days }, (_, i) => {
+    const d = `${monthStr}-${String(i + 1).padStart(2, '0')}`;
+    const dayTx = month.filter(t => t.date === d);
     return {
-      date: d.slice(-2),
-      income: dayTx.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0),
-      expense: dayTx.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0),
+      day: String(i + 1),
+      masuk: dayTx.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0),
+      keluar: dayTx.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0),
     };
   });
 
-  const topExpense = expenseCat.slice(0, 5);
-
-  const cats = CATEGORIES.filter(c => c.type === formType);
-
-  function openForm(type: 'income' | 'expense') {
-    setFormType(type);
-    setShowForm(true);
-  }
-
-  function submitForm(e: React.FormEvent<HTMLFormElement>) {
+  function addTx(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
-    const newTx: Transaction = {
+    const t: Transaction = {
       id: Date.now(),
-      type: formType,
-      category: fd.get('category') as string,
-      description: fd.get('description') as string || '',
+      type: modalType,
+      category: fd.get('cat') as string,
+      description: fd.get('desc') as string || '',
       amount: Number(fd.get('amount')),
       date: fd.get('date') as string,
     };
-    const updated = [...tx, newTx];
+    const updated = [...tx, t];
     setTx(updated);
     saveTx(updated);
-    setShowForm(false);
+    setModal(false);
   }
 
-  function deleteTx(id: number) {
+  function removeTx(id: number) {
     const updated = tx.filter(t => t.id !== id);
     setTx(updated);
     saveTx(updated);
   }
 
-  if (loading) {
+  if (!ready) {
     return (
-      <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0c0c1d 0%, #1a1a2e 50%, #16213e 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ minHeight: '100vh', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '3em', animation: 'pulse 1.5s infinite' }}>📊</div>
-          <p style={{ color: '#888', marginTop: '10px', fontSize: '0.9em' }}>Memuat ARIS...</p>
+          <div style={{ width: 48, height: 48, border: '3px solid #e2e8f0', borderTopColor: '#6366f1', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 16px' }} />
+          <p style={{ color: '#94a3b8', fontSize: 14, fontFamily: 'Inter, sans-serif' }}>Memuat ARIS...</p>
         </div>
       </div>
     );
   }
 
+  const cats = CATEGORIES.filter(c => c.type === modalType);
+
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0c0c1d 0%, #1a1a2e 50%, #16213e 100%)', color: '#fff', fontFamily: "'Inter', -apple-system, sans-serif" }}>
-      {/* CSS */}
+    <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes countUp { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
-        .card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 20px; backdrop-filter: blur(20px); transition: all 0.3s ease; }
-        .card:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); transform: translateY(-2px); }
-        .btn { border: none; border-radius: 14px; padding: 14px 20px; font-size: 0.9em; font-weight: 600; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .btn:hover { transform: translateY(-2px); }
-        .btn-income { background: linear-gradient(135deg, #10b981, #059669); color: white; box-shadow: 0 4px 15px rgba(16,185,129,0.3); }
-        .btn-income:hover { box-shadow: 0 6px 20px rgba(16,185,129,0.4); }
-        .btn-expense { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; box-shadow: 0 4px 15px rgba(239,68,68,0.3); }
-        .btn-expense:hover { box-shadow: 0 6px 20px rgba(239,68,68,0.4); }
-        .tx-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: rgba(0,0,0,0.2); border-radius: 14px; margin-bottom: 8px; transition: all 0.2s ease; }
-        .tx-row:hover { background: rgba(0,0,0,0.3); }
-        .tab { padding: 10px 20px; border-radius: 12px; font-size: 0.85em; font-weight: 600; cursor: pointer; transition: all 0.3s ease; border: none; }
-        .tab-active { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; box-shadow: 0 4px 15px rgba(99,102,241,0.3); }
-        .tab-inactive { background: rgba(255,255,255,0.05); color: #888; }
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; z-index: 50; animation: fadeIn 0.2s ease; }
-        .modal { background: linear-gradient(135deg, #1e1e3f, #16213e); border: 1px solid rgba(255,255,255,0.1); border-radius: 24px; padding: 28px; width: 100%; max-width: 420px; animation: slideUp 0.3s ease; }
-        input, select { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 14px 16px; color: white; font-size: 0.95em; outline: none; transition: all 0.2s ease; }
-        input:focus, select:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.2); }
-        input::placeholder { color: #555; }
-        .kpi-value { font-size: 1.8em; font-weight: 800; letter-spacing: -1px; }
-        .gradient-text { background: linear-gradient(135deg, #6366f1, #22d3ee); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-        .glow-green { text-shadow: 0 0 20px rgba(16,185,129,0.5); }
-        .glow-red { text-shadow: 0 0 20px rgba(239,68,68,0.5); }
-        .progress-bar { height: 8px; background: rgba(255,255,255,0.05); border-radius: 4px; overflow: hidden; }
-        .progress-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(100%); } to { opacity: 1; transform: translateY(0); } }
+        body { font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
+        ::selection { background: #6366f120; }
       `}</style>
 
-      <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '20px 16px' }}>
+      <div style={{ minHeight: '100vh', background: '#f8fafc', fontFamily: "'Plus Jakarta Sans', sans-serif", color: '#1e293b' }}>
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', animation: 'slideUp 0.5s ease' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={{ width: '40px', height: '40px', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2em', boxShadow: '0 4px 15px rgba(99,102,241,0.3)' }}>📊</div>
+        <header style={{ background: 'white', borderBottom: '1px solid #f1f5f9', padding: '16px 20px', position: 'sticky', top: 0, zIndex: 40 }}>
+          <div style={{ maxWidth: 480, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ width: 36, height: 36, background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(99,102,241,0.3)' }}>
+                <span style={{ fontSize: 18 }}>📊</span>
+              </div>
               <div>
-                <h1 style={{ fontSize: '1.5em', fontWeight: 800 }} className="gradient-text">ARIS</h1>
-                <p style={{ fontSize: '0.7em', color: '#666', marginTop: '-2px' }}>Akuntansi Rapi Sistematis</p>
+                <h1 style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.5px' }}>ARIS</h1>
+                <p style={{ fontSize: 10, color: '#94a3b8', fontWeight: 500 }}>Akuntansi Rapi Sistematis</p>
               </div>
             </div>
+            <span style={{ fontSize: 12, color: '#94a3b8', fontWeight: 500 }}>{monthName}</span>
           </div>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button onClick={() => setActiveTab('dashboard')} className={`tab ${activeTab === 'dashboard' ? 'tab-active' : 'tab-inactive'}`}>📊 Dashboard</button>
-            <button onClick={() => setActiveTab('transactions')} className={`tab ${activeTab === 'transactions' ? 'tab-active' : 'tab-inactive'}`}>📋 Riwayat</button>
-          </div>
-        </div>
+        </header>
 
-        {activeTab === 'dashboard' ? (
-          <div style={{ animation: 'slideUp 0.5s ease' }}>
-            {/* KPI Cards */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '20px' }}>
-              <div className="card" style={{ padding: '20px', textAlign: 'center' }}>
-                <p style={{ fontSize: '0.7em', color: '#666', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>📥 Pemasukan</p>
-                <p className="kpi-value" style={{ color: '#10b981' }}>{fmt(income)}</p>
-                <p style={{ fontSize: '0.7em', color: '#10b981', marginTop: '4px' }}>{fmtFull(income)}</p>
-              </div>
-              <div className="card" style={{ padding: '20px', textAlign: 'center' }}>
-                <p style={{ fontSize: '0.7em', color: '#666', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>📤 Pengeluaran</p>
-                <p className="kpi-value" style={{ color: '#ef4444' }}>{fmt(expense)}</p>
-                <p style={{ fontSize: '0.7em', color: '#ef4444', marginTop: '4px' }}>{fmtFull(expense)}</p>
-              </div>
-              <div className="card" style={{ padding: '20px', textAlign: 'center' }}>
-                <p style={{ fontSize: '0.7em', color: '#666', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>💰 Saldo</p>
-                <p className="kpi-value" style={{ color: balance >= 0 ? '#6366f1' : '#ef4444' }}>{fmt(balance)}</p>
-                <p style={{ fontSize: '0.7em', color: balance >= 0 ? '#6366f1' : '#ef4444', marginTop: '4px' }}>
-                  {savingsRate.toFixed(0)}% tabungan
-                </p>
-              </div>
-            </div>
+        <main style={{ maxWidth: 480, margin: '0 auto', padding: '16px 20px 100px' }}>
 
-            {/* Savings Progress */}
-            {income > 0 && (
-              <div className="card" style={{ padding: '16px 20px', marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ fontSize: '0.8em', color: '#888' }}>🎯 Target Tabungan</span>
-                  <span style={{ fontSize: '0.8em', fontWeight: 600, color: savingsRate >= 20 ? '#10b981' : '#f59e0b' }}>
-                    {savingsRate.toFixed(1)}% {savingsRate >= 20 ? '✅' : '⚠️'}
-                  </span>
+          {tab === 'home' ? (
+            <div style={{ animation: 'fadeUp 0.4s ease' }}>
+              {/* Balance Card */}
+              <div style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6, #a78bfa)', borderRadius: 20, padding: 24, color: 'white', marginBottom: 16, boxShadow: '0 8px 32px rgba(99,102,241,0.25)', position: 'relative', overflow: 'hidden' }}>
+                <div style={{ position: 'absolute', top: -30, right: -30, width: 120, height: 120, background: 'rgba(255,255,255,0.1)', borderRadius: '50%' }} />
+                <div style={{ position: 'absolute', bottom: -20, left: -20, width: 80, height: 80, background: 'rgba(255,255,255,0.05)', borderRadius: '50%' }} />
+                <p style={{ fontSize: 12, opacity: 0.8, fontWeight: 600, marginBottom: 4 }}>💰 Saldo Bulan Ini</p>
+                <p style={{ fontSize: 32, fontWeight: 800, letterSpacing: '-1px', marginBottom: 16 }}>{formatRp(balance)}</p>
+                <div style={{ display: 'flex', gap: 16 }}>
+                  <div style={{ flex: 1, background: 'rgba(255,255,255,0.15)', borderRadius: 12, padding: '10px 12px' }}>
+                    <p style={{ fontSize: 10, opacity: 0.7, fontWeight: 600 }}>↑ MASUK</p>
+                    <p style={{ fontSize: 15, fontWeight: 700, marginTop: 2 }}>{formatShort(income)}</p>
+                  </div>
+                  <div style={{ flex: 1, background: 'rgba(255,255,255,0.15)', borderRadius: 12, padding: '10px 12px' }}>
+                    <p style={{ fontSize: 10, opacity: 0.7, fontWeight: 600 }}>↓ KELUAR</p>
+                    <p style={{ fontSize: 15, fontWeight: 700, marginTop: 2 }}>{formatShort(expense)}</p>
+                  </div>
+                  <div style={{ flex: 1, background: 'rgba(255,255,255,0.15)', borderRadius: 12, padding: '10px 12px' }}>
+                    <p style={{ fontSize: 10, opacity: 0.7, fontWeight: 600 }}>🎯 TABUNG</p>
+                    <p style={{ fontSize: 15, fontWeight: 700, marginTop: 2 }}>{savingsRate.toFixed(0)}%</p>
+                  </div>
                 </div>
-                <div className="progress-bar">
-                  <div className="progress-fill" style={{ width: `${Math.min(savingsRate, 100)}%`, background: savingsRate >= 20 ? 'linear-gradient(90deg, #10b981, #059669)' : 'linear-gradient(90deg, #f59e0b, #d97706)' }}></div>
-                </div>
-                <p style={{ fontSize: '0.7em', color: '#555', marginTop: '6px' }}>Target: 20% dari penghasilan</p>
               </div>
-            )}
 
-            {/* Action Buttons */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
-              <button onClick={() => openForm('income')} className="btn btn-income">➕ Pemasukan</button>
-              <button onClick={() => openForm('expense')} className="btn btn-expense">➖ Pengeluaran</button>
-            </div>
+              {/* Action Buttons */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}>
+                <button onClick={() => { setModalType('income'); setModal(true); }} style={{ background: '#10b981', color: 'white', border: 'none', borderRadius: 14, padding: '14px 0', fontWeight: 700, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, boxShadow: '0 2px 8px rgba(16,185,129,0.3)', transition: 'all 0.2s' }}>
+                  <span style={{ fontSize: 16 }}>＋</span> Pemasukan
+                </button>
+                <button onClick={() => { setModalType('expense'); setModal(true); }} style={{ background: '#ef4444', color: 'white', border: 'none', borderRadius: 14, padding: '14px 0', fontWeight: 700, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, boxShadow: '0 2px 8px rgba(239,68,68,0.3)', transition: 'all 0.2s' }}>
+                  <span style={{ fontSize: 16 }}>－</span> Pengeluaran
+                </button>
+              </div>
 
-            {/* Charts Row */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '12px', marginBottom: '20px' }}>
-              {/* Area Chart */}
-              <div className="card" style={{ padding: '20px' }}>
-                <h3 style={{ fontSize: '0.85em', color: '#888', marginBottom: '16px', fontWeight: 600 }}>📈 Aliran Kas Harian</h3>
-                {dailyData.some(d => d.income > 0 || d.expense > 0) ? (
-                  <ResponsiveContainer width="100%" height={220}>
-                    <AreaChart data={dailyData}>
+              {/* Cashflow Chart */}
+              <div style={{ background: 'white', borderRadius: 16, padding: 20, marginBottom: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.04)', border: '1px solid #f1f5f9' }}>
+                <h3 style={{ fontSize: 13, fontWeight: 700, color: '#64748b', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ width: 3, height: 14, background: '#6366f1', borderRadius: 2 }}></span>
+                  ALIRAN KAS HARIAN
+                </h3>
+                {daily.some(d => d.masuk > 0 || d.keluar > 0) ? (
+                  <ResponsiveContainer width="100%" height={180}>
+                    <AreaChart data={daily}>
                       <defs>
-                        <linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#10b981" stopOpacity={0.3}/>
-                          <stop offset="100%" stopColor="#10b981" stopOpacity={0}/>
-                        </linearGradient>
-                        <linearGradient id="expenseGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#ef4444" stopOpacity={0.3}/>
-                          <stop offset="100%" stopColor="#ef4444" stopOpacity={0}/>
-                        </linearGradient>
+                        <linearGradient id="gIn" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#10b981" stopOpacity={0.15}/><stop offset="100%" stopColor="#10b981" stopOpacity={0}/></linearGradient>
+                        <linearGradient id="gOut" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#ef4444" stopOpacity={0.15}/><stop offset="100%" stopColor="#ef4444" stopOpacity={0}/></linearGradient>
                       </defs>
-                      <XAxis dataKey="date" tick={{ fill: '#555', fontSize: 10 }} axisLine={false} tickLine={false} />
-                      <YAxis tick={{ fill: '#555', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${Number(v) / 1000}k`} />
-                      <Tooltip contentStyle={{ background: '#1e1e3f', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, fontSize: '0.8em' }} formatter={(v) => fmtFull(Number(v))} />
-                      <Area type="monotone" dataKey="income" stroke="#10b981" strokeWidth={2} fill="url(#incomeGrad)" name="Masuk" />
-                      <Area type="monotone" dataKey="expense" stroke="#ef4444" strokeWidth={2} fill="url(#expenseGrad)" name="Keluar" />
+                      <XAxis dataKey="day" tick={{ fill: '#cbd5e1', fontSize: 10 }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fill: '#cbd5e1', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v) => formatShort(Number(v))} width={40} />
+                      <Tooltip contentStyle={{ background: '#1e293b', border: 'none', borderRadius: 12, color: 'white', fontSize: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }} formatter={(v) => formatRp(Number(v))} />
+                      <Area type="monotone" dataKey="masuk" stroke="#10b981" strokeWidth={2} fill="url(#gIn)" name="Masuk" />
+                      <Area type="monotone" dataKey="keluar" stroke="#ef4444" strokeWidth={2} fill="url(#gOut)" name="Keluar" />
                     </AreaChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div style={{ height: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
-                    <span style={{ fontSize: '2em', marginBottom: '10px' }}>📊</span>
-                    <p style={{ color: '#555', fontSize: '0.85em' }}>Tambah transaksi pertama!</p>
+                  <div style={{ height: 160, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#cbd5e1' }}>
+                    <span style={{ fontSize: 32, marginBottom: 8 }}>📈</span>
+                    <p style={{ fontSize: 13, fontWeight: 500 }}>Belum ada data</p>
+                    <p style={{ fontSize: 11, marginTop: 2 }}>Tambah transaksi pertamamu!</p>
                   </div>
                 )}
               </div>
 
-              {/* Donut Chart */}
-              <div className="card" style={{ padding: '20px' }}>
-                <h3 style={{ fontSize: '0.85em', color: '#888', marginBottom: '16px', fontWeight: 600 }}>🍩 Pengeluaran</h3>
-                {expenseCat.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={220}>
-                    <PieChart>
-                      <Pie data={expenseCat} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={45} outerRadius={75} paddingAngle={3} style={{ fontSize: '0.7em' }}>
-                        {expenseCat.map((_, i) => (
-                          <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip contentStyle={{ background: '#1e1e3f', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, fontSize: '0.8em' }} formatter={(v) => fmtFull(Number(v))} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div style={{ height: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
-                    <span style={{ fontSize: '2em', marginBottom: '10px' }}>🍩</span>
-                    <p style={{ color: '#555', fontSize: '0.85em' }}>Belum ada data</p>
+              {/* Expense Breakdown */}
+              {expByCat.length > 0 && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+                  <div style={{ background: 'white', borderRadius: 16, padding: 18, boxShadow: '0 1px 3px rgba(0,0,0,0.04)', border: '1px solid #f1f5f9' }}>
+                    <h3 style={{ fontSize: 12, fontWeight: 700, color: '#64748b', marginBottom: 12 }}>🍩 PENGELUARAN</h3>
+                    <ResponsiveContainer width="100%" height={150}>
+                      <PieChart>
+                        <Pie data={expByCat.slice(0, 6)} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={30} outerRadius={55} paddingAngle={2} strokeWidth={0}>
+                          {expByCat.slice(0, 6).map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                        </Pie>
+                        <Tooltip contentStyle={{ background: '#1e293b', border: 'none', borderRadius: 10, color: 'white', fontSize: 11 }} formatter={(v) => formatRp(Number(v))} />
+                      </PieChart>
+                    </ResponsiveContainer>
                   </div>
-                )}
-              </div>
-            </div>
-
-            {/* Top Expenses */}
-            {topExpense.length > 0 && (
-              <div className="card" style={{ padding: '20px', marginBottom: '20px' }}>
-                <h3 style={{ fontSize: '0.85em', color: '#888', marginBottom: '16px', fontWeight: 600 }}>🔥 Top Pengeluaran</h3>
-                {topExpense.map((item, i) => {
-                  const pct = expense > 0 ? (item.value / expense * 100) : 0;
-                  return (
-                    <div key={i} style={{ marginBottom: '14px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                        <span style={{ fontSize: '0.85em', color: '#ccc' }}>{item.icon} {item.name}</span>
-                        <span style={{ fontSize: '0.85em', fontWeight: 600 }}>{fmtFull(item.value)} <span style={{ color: '#666', fontWeight: 400 }}>({pct.toFixed(0)}%)</span></span>
-                      </div>
-                      <div className="progress-bar">
-                        <div className="progress-fill" style={{ width: `${pct}%`, background: COLORS[i] }}></div>
-                      </div>
+                  <div style={{ background: 'white', borderRadius: 16, padding: 18, boxShadow: '0 1px 3px rgba(0,0,0,0.04)', border: '1px solid #f1f5f9' }}>
+                    <h3 style={{ fontSize: 12, fontWeight: 700, color: '#64748b', marginBottom: 12 }}>📊 DETAIL</h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      {expByCat.slice(0, 5).map((c, i) => (
+                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <div style={{ width: 6, height: 6, borderRadius: '50%', background: COLORS[i], flexShrink: 0 }} />
+                          <span style={{ fontSize: 11, color: '#64748b', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</span>
+                          <span style={{ fontSize: 11, fontWeight: 700, color: '#1e293b' }}>{formatShort(c.value)}</span>
+                        </div>
+                      ))}
                     </div>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Recent Transactions Preview */}
-            {tx.length > 0 && (
-              <div className="card" style={{ padding: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                  <h3 style={{ fontSize: '0.85em', color: '#888', fontWeight: 600 }}>🕐 Transaksi Terakhir</h3>
-                  <button onClick={() => setActiveTab('transactions')} style={{ background: 'none', border: 'none', color: '#6366f1', fontSize: '0.8em', cursor: 'pointer', fontWeight: 600 }}>Lihat semua →</button>
+                  </div>
                 </div>
-                {[...tx].reverse().slice(0, 5).map((t) => (
-                  <div key={t.id} className="tx-row">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: t.type === 'income' ? '#10b981' : '#ef4444', boxShadow: t.type === 'income' ? '0 0 10px #10b981' : '0 0 10px #ef4444' }}></div>
-                      <div>
-                        <p style={{ fontSize: '0.85em', fontWeight: 600 }}>{t.category}</p>
-                        <p style={{ fontSize: '0.7em', color: '#666' }}>{t.description || t.date}</p>
-                      </div>
-                    </div>
-                    <span style={{ fontWeight: 700, color: t.type === 'income' ? '#10b981' : '#ef4444', fontSize: '0.9em' }}>
-                      {t.type === 'income' ? '+' : '-'}{fmtFull(t.amount)}
-                    </span>
+              )}
+
+              {/* Recent Transactions */}
+              {tx.length > 0 && (
+                <div style={{ background: 'white', borderRadius: 16, padding: 18, boxShadow: '0 1px 3px rgba(0,0,0,0.04)', border: '1px solid #f1f5f9' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+                    <h3 style={{ fontSize: 13, fontWeight: 700, color: '#64748b' }}>🕐 TRANSAKSI TERAKHIR</h3>
+                    <button onClick={() => setTab('history')} style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, padding: '4px 10px', fontSize: 11, fontWeight: 600, color: '#6366f1', cursor: 'pointer' }}>Lihat Semua</button>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-        ) : (
-          /* Transactions Tab */
-          <div style={{ animation: 'slideUp 0.5s ease' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
-              <button onClick={() => openForm('income')} className="btn btn-income">➕ Pemasukan</button>
-              <button onClick={() => openForm('expense')} className="btn btn-expense">➖ Pengeluaran</button>
-            </div>
-            <div className="card" style={{ padding: '20px' }}>
-              <h3 style={{ fontSize: '0.85em', color: '#888', marginBottom: '16px', fontWeight: 600 }}>
-                📋 Semua Transaksi ({tx.length})
-              </h3>
-              {tx.length > 0 ? (
-                [...tx].reverse().map((t) => (
-                  <div key={t.id} className="tx-row">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: t.type === 'income' ? '#10b981' : '#ef4444' }}></div>
-                      <div>
-                        <p style={{ fontSize: '0.85em', fontWeight: 600 }}>{t.category}</p>
-                        <p style={{ fontSize: '0.7em', color: '#666' }}>{t.description || '-'} · {t.date}</p>
+                  {[...tx].reverse().slice(0, 5).map(t => (
+                    <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #f8fafc' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div style={{ width: 36, height: 36, borderRadius: 10, background: t.type === 'income' ? '#ecfdf5' : '#fef2f2', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>
+                          {CATEGORIES.find(c => c.name === t.category)?.icon || '📦'}
+                        </div>
+                        <div>
+                          <p style={{ fontSize: 13, fontWeight: 600 }}>{t.category}</p>
+                          <p style={{ fontSize: 11, color: '#94a3b8' }}>{t.description || t.date}</p>
+                        </div>
                       </div>
+                      <p style={{ fontSize: 14, fontWeight: 700, color: t.type === 'income' ? '#10b981' : '#ef4444' }}>
+                        {t.type === 'income' ? '+' : '-'}{formatShort(t.amount)}
+                      </p>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <span style={{ fontWeight: 700, color: t.type === 'income' ? '#10b981' : '#ef4444', fontSize: '0.9em' }}>
-                        {t.type === 'income' ? '+' : '-'}{fmtFull(t.amount)}
-                      </span>
-                      <button onClick={() => deleteTx(t.id)} style={{ background: 'rgba(239,68,68,0.1)', border: 'none', color: '#ef4444', borderRadius: '8px', padding: '4px 10px', cursor: 'pointer', fontSize: '0.75em' }}>✕</button>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div style={{ textAlign: 'center', padding: '40px 0' }}>
-                  <span style={{ fontSize: '3em' }}>📭</span>
-                  <p style={{ color: '#555', marginTop: '10px' }}>Belum ada transaksi</p>
+                  ))}
+                </div>
+              )}
+
+              {tx.length === 0 && (
+                <div style={{ background: 'white', borderRadius: 16, padding: 40, textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', border: '1px solid #f1f5f9' }}>
+                  <span style={{ fontSize: 48, display: 'block', marginBottom: 12 }}>👋</span>
+                  <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 6 }}>Selamat Datang di ARIS!</h3>
+                  <p style={{ fontSize: 13, color: '#94a3b8' }}>Mulai catat keuanganmu dengan klik tombol di atas</p>
                 </div>
               )}
             </div>
+          ) : (
+            /* History Tab */
+            <div style={{ animation: 'fadeUp 0.4s ease' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
+                <button onClick={() => { setModalType('income'); setModal(true); }} style={{ background: '#10b981', color: 'white', border: 'none', borderRadius: 14, padding: '14px 0', fontWeight: 700, fontSize: 14, cursor: 'pointer', boxShadow: '0 2px 8px rgba(16,185,129,0.3)' }}>＋ Pemasukan</button>
+                <button onClick={() => { setModalType('expense'); setModal(true); }} style={{ background: '#ef4444', color: 'white', border: 'none', borderRadius: 14, padding: '14px 0', fontWeight: 700, fontSize: 14, cursor: 'pointer', boxShadow: '0 2px 8px rgba(239,68,68,0.3)' }}>－ Pengeluaran</button>
+              </div>
+              <div style={{ background: 'white', borderRadius: 16, padding: 18, boxShadow: '0 1px 3px rgba(0,0,0,0.04)', border: '1px solid #f1f5f9' }}>
+                <h3 style={{ fontSize: 13, fontWeight: 700, color: '#64748b', marginBottom: 14 }}>📋 SEMUA TRANSAKSI ({tx.length})</h3>
+                {tx.length > 0 ? [...tx].reverse().map(t => (
+                  <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #f8fafc' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div style={{ width: 36, height: 36, borderRadius: 10, background: t.type === 'income' ? '#ecfdf5' : '#fef2f2', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>
+                        {CATEGORIES.find(c => c.name === t.category)?.icon || '📦'}
+                      </div>
+                      <div>
+                        <p style={{ fontSize: 13, fontWeight: 600 }}>{t.category}</p>
+                        <p style={{ fontSize: 11, color: '#94a3b8' }}>{t.description || '-'} · {t.date}</p>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <p style={{ fontSize: 14, fontWeight: 700, color: t.type === 'income' ? '#10b981' : '#ef4444' }}>{t.type === 'income' ? '+' : '-'}{formatShort(t.amount)}</p>
+                      <button onClick={() => removeTx(t.id)} style={{ background: '#fef2f2', border: 'none', borderRadius: 6, padding: '3px 7px', cursor: 'pointer', fontSize: 11, color: '#ef4444', fontWeight: 600 }}>✕</button>
+                    </div>
+                  </div>
+                )) : (
+                  <div style={{ textAlign: 'center', padding: 30, color: '#cbd5e1' }}>
+                    <span style={{ fontSize: 36 }}>📭</span>
+                    <p style={{ marginTop: 8, fontSize: 13 }}>Belum ada transaksi</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </main>
+
+        {/* Bottom Navigation */}
+        <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'white', borderTop: '1px solid #f1f5f9', padding: '8px 20px', paddingBottom: 'max(8px, env(safe-area-inset-bottom))', zIndex: 40 }}>
+          <div style={{ maxWidth: 480, margin: '0 auto', display: 'flex', justifyContent: 'space-around' }}>
+            <button onClick={() => setTab('home')} style={{ background: 'none', border: 'none', padding: '8px 20px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+              <span style={{ fontSize: 20, opacity: tab === 'home' ? 1 : 0.4 }}>🏠</span>
+              <span style={{ fontSize: 10, fontWeight: 700, color: tab === 'home' ? '#6366f1' : '#94a3b8' }}>Home</span>
+            </button>
+            <button onClick={() => setTab('history')} style={{ background: 'none', border: 'none', padding: '8px 20px', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+              <span style={{ fontSize: 20, opacity: tab === 'history' ? 1 : 0.4 }}>📋</span>
+              <span style={{ fontSize: 10, fontWeight: 700, color: tab === 'history' ? '#6366f1' : '#94a3b8' }}>Riwayat</span>
+            </button>
+          </div>
+        </nav>
+
+        {/* Modal */}
+        {modal && (
+          <div onClick={(e) => e.target === e.currentTarget && setModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 50, animation: 'fadeIn 0.2s ease' }}>
+            <div style={{ background: 'white', borderRadius: '24px 24px 0 0', padding: '24px 20px', paddingBottom: 'max(24px, env(safe-area-inset-bottom))', width: '100%', maxWidth: 480, animation: 'slideUp 0.3s ease' }}>
+              <div style={{ width: 36, height: 4, background: '#e2e8f0', borderRadius: 2, margin: '0 auto 20px' }} />
+              <h2 style={{ fontSize: 18, fontWeight: 800, marginBottom: 20, textAlign: 'center' }}>
+                {modalType === 'income' ? '📥 Tambah Pemasukan' : '📤 Tambah Pengeluaran'}
+              </h2>
+              <form onSubmit={addTx} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div>
+                  <label style={{ fontSize: 11, color: '#94a3b8', fontWeight: 700, display: 'block', marginBottom: 6, letterSpacing: '0.5px' }}>KATEGORI</label>
+                  <select name="cat" required style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, color: '#1e293b', background: '#f8fafc', outline: 'none', fontFamily: 'inherit' }}>
+                    {cats.map(c => <option key={c.name} value={c.name}>{c.icon} {c.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: 11, color: '#94a3b8', fontWeight: 700, display: 'block', marginBottom: 6, letterSpacing: '0.5px' }}>JUMLAH (Rp)</label>
+                  <input name="amount" type="number" required placeholder="15.000" style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, color: '#1e293b', background: '#f8fafc', outline: 'none', fontFamily: 'inherit' }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 11, color: '#94a3b8', fontWeight: 700, display: 'block', marginBottom: 6, letterSpacing: '0.5px' }}>TANGGAL</label>
+                  <input name="date" type="date" required defaultValue={new Date().toISOString().slice(0, 10)} style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, color: '#1e293b', background: '#f8fafc', outline: 'none', fontFamily: 'inherit' }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 11, color: '#94a3b8', fontWeight: 700, display: 'block', marginBottom: 6, letterSpacing: '0.5px' }}>KETERANGAN</label>
+                  <input name="desc" type="text" placeholder="Opsional" style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1.5px solid #e2e8f0', fontSize: 14, color: '#1e293b', background: '#f8fafc', outline: 'none', fontFamily: 'inherit' }} />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 4 }}>
+                  <button type="button" onClick={() => setModal(false)} style={{ padding: 14, borderRadius: 14, background: '#f1f5f9', border: 'none', fontWeight: 700, fontSize: 14, color: '#64748b', cursor: 'pointer' }}>Batal</button>
+                  <button type="submit" style={{ padding: 14, borderRadius: 14, background: modalType === 'income' ? '#10b981' : '#ef4444', border: 'none', fontWeight: 700, fontSize: 14, color: 'white', cursor: 'pointer', boxShadow: `0 2px 8px ${modalType === 'income' ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}` }}>💾 Simpan</button>
+                </div>
+              </form>
+            </div>
           </div>
         )}
-
-        {/* Footer */}
-        <div style={{ textAlign: 'center', color: '#333', fontSize: '0.7em', marginTop: '30px', paddingBottom: '20px' }}>
-          <span className="gradient-text" style={{ fontWeight: 700 }}>ARIS</span> — Akuntansi Rapi Sistematis © 2026
-        </div>
       </div>
-
-      {/* Modal Form */}
-      {showForm && (
-        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setShowForm(false)}>
-          <div className="modal">
-            <h2 style={{ fontSize: '1.2em', fontWeight: 700, marginBottom: '20px' }}>
-              {formType === 'income' ? '📥 Tambah Pemasukan' : '📤 Tambah Pengeluaran'}
-            </h2>
-            <form onSubmit={submitForm} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <div>
-                <label style={{ fontSize: '0.75em', color: '#888', display: 'block', marginBottom: '6px', fontWeight: 600 }}>KATEGORI</label>
-                <select name="category" required>
-                  {cats.map((c) => (
-                    <option key={c.name} value={c.name}>{c.icon} {c.name}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label style={{ fontSize: '0.75em', color: '#888', display: 'block', marginBottom: '6px', fontWeight: 600 }}>JUMLAH (Rp)</label>
-                <input name="amount" type="number" required placeholder="15000" />
-              </div>
-              <div>
-                <label style={{ fontSize: '0.75em', color: '#888', display: 'block', marginBottom: '6px', fontWeight: 600 }}>TANGGAL</label>
-                <input name="date" type="date" required defaultValue={new Date().toISOString().slice(0, 10)} />
-              </div>
-              <div>
-                <label style={{ fontSize: '0.75em', color: '#888', display: 'block', marginBottom: '6px', fontWeight: 600 }}>KETERANGAN</label>
-                <input name="description" type="text" placeholder="Opsional" />
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '6px' }}>
-                <button type="button" onClick={() => setShowForm(false)} style={{ padding: '14px', borderRadius: '14px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#888', fontWeight: 600, cursor: 'pointer', fontSize: '0.9em' }}>Batal</button>
-                <button type="submit" className={`btn ${formType === 'income' ? 'btn-income' : 'btn-expense'}`} style={{ width: '100%' }}>💾 Simpan</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-    </div>
+    </>
   );
 }
