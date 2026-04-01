@@ -146,7 +146,7 @@ export default function App() {
 
   return (
     <>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');*{margin:0;padding:0;box-sizing:border-box}@keyframes spin{to{transform:rotate(360deg)}}body{font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased;background:#f8fafc;color:#1f2937;-webkit-tap-highlight-color:transparent}input,select{-webkit-appearance:none;appearance:none}`}</style>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');*{margin:0;padding:0;box-sizing:border-box}@keyframes spin{to{transform:rotate(360deg)}}body{font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased;background:#f8fafc;color:#1f2937}@media(min-width:768px){.bn{display:none!important}.ct{max-width:720px;margin:0 auto}}`}</style>
       <div style={{ minHeight: '100vh', background: '#f8fafc', fontFamily: "'Inter', system-ui, sans-serif", paddingBottom: 72 }}>
 
         {/* Header */}
@@ -163,7 +163,7 @@ export default function App() {
           </div>
         </header>
 
-        <main style={{ padding: 16 }}>
+        <main className="ct" style={{ padding: 16 }}>
           {/* HOME */}
           {tab === 'home' && <div>
             {/* KPI Cards */}
@@ -327,7 +327,7 @@ export default function App() {
         </main>
 
         {/* Bottom Nav */}
-        <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'white', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-around', padding: '8px 0', paddingBottom: 'max(8px, env(safe-area-inset-bottom))', zIndex: 40 }}>
+        <nav className="bn" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'white', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-around', padding: '8px 0', paddingBottom: 'max(8px, env(safe-area-inset-bottom))', zIndex: 40 }}>
           {([
             { tab: 'home' as Tab, icon: '◉', label: 'Home' },
             { tab: 'journal' as Tab, icon: '✎', label: 'Jurnal' },
