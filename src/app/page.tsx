@@ -83,6 +83,22 @@ export default function App() {
   const pendapatan = coa.filter(a => a.type === 'pendapatan').map(a => ({ ...a, bal: getBal(a.name) })).filter(a => a.bal !== 0);
   const beban = coa.filter(a => a.type === 'beban').map(a => ({ ...a, bal: getBal(a.name) })).filter(a => a.bal !== 0);
 
+  function deleteJournal(id: number) {
+    if (confirm('Hapus entri jurnal ini?')) {
+      const updated = journal.filter(j => j.id !== id);
+      saveJournal(updated);
+    }
+  }
+
+  function resetAll() {
+    if (confirm('Hapus SEMUA data? Ini tidak bisa dibatalkan!')) {
+      localStorage.removeItem('aris_journal');
+      localStorage.removeItem('aris_debts');
+      setJournal([]);
+      setDebts([]);
+    }
+  }
+
   function addJournal(e: React.FormEvent) {
     e.preventDefault();
     const debit = jLines.filter(l => l.account && l.debit).map(l => ({ account: l.account, amount: Number(l.debit) }));
@@ -142,7 +158,8 @@ export default function App() {
                 <div style={{ fontWeight: 800, fontSize: 16, letterSpacing: '-0.5px' }}>ARIS</div>
               </div>
             </div>
-            <button onClick={exportExcel} style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: 11, fontWeight: 600, color: '#6366f1', cursor: 'pointer' }}>Export</button>
+            <button onClick={exportExcel} style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: 11, fontWeight: 600, color: '#6366f1', cursor: 'pointer', marginRight: 6 }}>Export</button>
+            <button onClick={resetAll} style={{ background: '#fef2f2', border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: 11, fontWeight: 600, color: '#ef4444', cursor: 'pointer' }}>Reset</button>
           </div>
         </header>
 
@@ -199,7 +216,10 @@ export default function App() {
                 <div key={j.id} style={{ padding: '12px 14px', borderBottom: '1px solid #f8fafc' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
                     <span style={{ fontSize: 11, fontWeight: 600, color: '#6366f1', background: '#eef2ff', padding: '2px 8px', borderRadius: 6 }}>{j.ref}</span>
-                    <span style={{ fontSize: 11, color: '#9ca3af' }}>{j.date}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontSize: 11, color: '#9ca3af' }}>{j.date}</span>
+                      <button onClick={() => deleteJournal(j.id)} style={{ background: '#fef2f2', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontSize: 11, color: '#ef4444', fontWeight: 600 }}>Hapus</button>
+                    </div>
                   </div>
                   <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>{j.desc || '-'}</div>
                   {j.debit.map((d, i) => (
