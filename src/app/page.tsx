@@ -63,8 +63,8 @@ export default function App() {
       try {
         const { data: jData } = await supabase.from('journal_entries').select('*').order('id', { ascending: true });
         const { data: dData } = await supabase.from('debts').select('*').order('id', { ascending: true });
-        if (jData) setJournal(jData.map(r => ({ id: Number(r.id), date: r.date, ref: r.ref, desc: r.desc || '', debit: r.debit, credit: r.credit })));
-        if (dData) setDebts(dData.map(r => ({ id: Number(r.id), type: r.type as 'hutang'|'piutang', name: r.name, amount: Number(r.amount), paid: Number(r.paid), dueDate: r.due_date || '', desc: r.desc || '', status: r.status as 'active'|'paid' })));
+        if (jData) setJournal(jData.map(r => ({ id: Number(r.id), date: r.date, ref: r.ref, desc: r.description || '', debit: r.debit, credit: r.credit })));
+        if (dData) setDebts(dData.map(r => ({ id: Number(r.id), type: r.type as 'hutang'|'piutang', name: r.name, amount: Number(r.amount), paid: Number(r.paid), dueDate: r.due_date || '', desc: r.description || '', status: r.status as 'active'|'paid' })));
       } catch { console.log('Supabase error'); }
       setReady(true);
     }
@@ -73,21 +73,21 @@ export default function App() {
 
   function reload() {
     supabase.from('journal_entries').select('*').order('id', { ascending: true }).then(({ data }) => {
-      if (data) setJournal(data.map(r => ({ id: Number(r.id), date: r.date, ref: r.ref, desc: r.desc || '', debit: r.debit, credit: r.credit })));
+      if (data) setJournal(data.map(r => ({ id: Number(r.id), date: r.date, ref: r.ref, desc: r.description || '', debit: r.debit, credit: r.credit })));
     });
     supabase.from('debts').select('*').order('id', { ascending: true }).then(({ data }) => {
-      if (data) setDebts(data.map(r => ({ id: Number(r.id), type: r.type as 'hutang'|'piutang', name: r.name, amount: Number(r.amount), paid: Number(r.paid), dueDate: r.due_date || '', desc: r.desc || '', status: r.status as 'active'|'paid' })));
+      if (data) setDebts(data.map(r => ({ id: Number(r.id), type: r.type as 'hutang'|'piutang', name: r.name, amount: Number(r.amount), paid: Number(r.paid), dueDate: r.due_date || '', desc: r.description || '', status: r.status as 'active'|'paid' })));
     });
   }
 
   async function saveJournal(j: JournalEntry[]) {
     setJournal(j);
-    await supabase.from('journal_entries').upsert(j.map(e => ({ id: e.id, date: e.date, ref: e.ref, desc: e.desc, debit: e.debit, credit: e.credit })));
+    await supabase.from('journal_entries').upsert(j.map(e => ({ id: e.id, date: e.date, ref: e.ref, description: e.desc, debit: e.debit, credit: e.credit })));
   }
 
   async function saveDebts(d: Debt[]) {
     setDebts(d);
-    await supabase.from('debts').upsert(d.map(e => ({ id: e.id, type: e.type, name: e.name, amount: e.amount, paid: e.paid, due_date: e.dueDate, desc: e.desc, status: e.status })));
+    await supabase.from('debts').upsert(d.map(e => ({ id: e.id, type: e.type, name: e.name, amount: e.amount, paid: e.paid, due_date: e.dueDate, description: e.desc, status: e.status })));
   }
 
   function getBal(name: string) { let b = 0; journal.forEach(e => { e.debit.forEach(d => { if (d.account === name) b += d.amount; }); e.credit.forEach(c => { if (c.account === name) b -= c.amount; }); }); return b; }
