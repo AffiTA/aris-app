@@ -127,17 +127,17 @@ export default function App() {
   if (!ready) return <div style={{ minHeight: '100vh', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><p style={{ color: '#94a3b8' }}>Loading ARIS...</p></div>;
 
   const navItems: { tab: Tab; icon: string; label: string }[] = [
-    { tab: 'dashboard', icon: '📊', label: 'Dashboard' },
-    { tab: 'journal', icon: '📝', label: 'Jurnal' },
-    { tab: 'ledger', icon: '📖', label: 'Buku Besar' },
-    { tab: 'report', icon: '📈', label: 'Laporan' },
-    { tab: 'coa', icon: '🗂️', label: 'Akun' },
+    { tab: 'dashboard', icon: '◉', label: 'Dashboard' },
+    { tab: 'journal', icon: '✎', label: 'Jurnal' },
+    { tab: 'ledger', icon: '☰', label: 'Buku Besar' },
+    { tab: 'report', icon: '◈', label: 'Laporan' },
+    { tab: 'coa', icon: '▤', label: 'Akun' },
   ];
 
   return (
     <>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');*{margin:0;padding:0;box-sizing:border-box}body{font-family:'DM Sans',sans-serif;-webkit-font-smoothing:antialiased;background:#f1f5f9}`}</style>
-      <div style={{ minHeight: '100vh', background: '#f1f5f9', fontFamily: "'DM Sans', sans-serif", color: '#1e293b' }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Space Grotesk',system-ui,sans-serif;-webkit-font-smoothing:antialiased;background:#f1f5f9}`}</style>
+      <div style={{ minHeight: '100vh', background: '#f1f5f9', fontFamily: "'Space Grotesk', system-ui, sans-serif", color: '#1e293b' }}>
         {/* Top Nav */}
         <header style={{ background: '#0f172a', color: 'white', padding: '12px 20px', position: 'sticky', top: 0, zIndex: 40 }}>
           <div style={{ maxWidth: 960, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -150,8 +150,8 @@ export default function App() {
             </div>
             <div style={{ display: 'flex', gap: 2 }}>
               {navItems.map(n => (
-                <button key={n.tab} onClick={() => setTab(n.tab)} style={{ background: tab === n.tab ? '#1e293b' : 'transparent', color: tab === n.tab ? 'white' : '#64748b', border: 'none', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4, transition: 'all 0.2s' }}>
-                  <span style={{ fontSize: 14 }}>{n.icon}</span> {n.label}
+                <button key={n.tab} onClick={() => setTab(n.tab)} style={{ background: tab === n.tab ? '#1e293b' : 'transparent', color: tab === n.tab ? 'white' : '#64748b', border: 'none', borderRadius: 8, padding: '6px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4, transition: 'all 0.2s', letterSpacing: '0.3px' }}>
+                  <span style={{ fontSize: 11, opacity: 0.7 }}>{n.icon}</span> {n.label}
                 </button>
               ))}
             </div>
@@ -180,7 +180,7 @@ export default function App() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 16, marginBottom: 20 }}>
                 <div style={{ background: 'white', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-                  <h3 style={{ fontSize: 13, fontWeight: 700, color: '#64748b', marginBottom: 16 }}>📊 Neraca (Balance Sheet)</h3>
+                  <h3 style={{ fontSize: 13, fontWeight: 700, color: '#64748b', marginBottom: 16 }}>Neraca (Balance Sheet)</h3>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                     <div>
                       <p style={{ fontSize: 11, fontWeight: 700, color: '#3b82f6', marginBottom: 8, borderBottom: '2px solid #3b82f6', paddingBottom: 4 }}>ASET</p>
@@ -222,7 +222,7 @@ export default function App() {
                 </div>
 
                 <div style={{ background: 'white', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-                  <h3 style={{ fontSize: 13, fontWeight: 700, color: '#64748b', marginBottom: 16 }}>📝 Jurnal Terakhir</h3>
+                  <h3 style={{ fontSize: 13, fontWeight: 700, color: '#64748b', marginBottom: 16 }}>Jurnal Terakhir</h3>
                   {journal.length > 0 ? [...journal].reverse().slice(0, 6).map(j => (
                     <div key={j.id} style={{ padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -241,7 +241,7 @@ export default function App() {
           {tab === 'journal' && (
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                <h2 style={{ fontSize: 16, fontWeight: 800 }}>📝 Jurnal Umum</h2>
+                <h2 style={{ fontSize: 16, fontWeight: 800 }}>Jurnal Umum</h2>
                 <button onClick={() => setModal(true)} style={{ background: '#6366f1', color: 'white', border: 'none', borderRadius: 10, padding: '10px 20px', fontWeight: 700, fontSize: 13, cursor: 'pointer', boxShadow: '0 2px 8px rgba(99,102,241,0.3)' }}>＋ Entri Baru</button>
               </div>
               <div style={{ background: 'white', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
@@ -284,7 +284,7 @@ export default function App() {
           {/* LEDGER */}
           {tab === 'ledger' && (
             <div>
-              <h2 style={{ fontSize: 16, fontWeight: 800, marginBottom: 16 }}>📖 Buku Besar</h2>
+              <h2 style={{ fontSize: 16, fontWeight: 800, marginBottom: 16 }}>Buku Besar</h2>
               <div style={{ marginBottom: 16 }}>
                 <select value={ledgerAcc} onChange={e => setLedgerAcc(e.target.value)} style={{ padding: '10px 14px', borderRadius: 10, border: '1.5px solid #e2e8f0', fontSize: 13, width: 300, background: 'white' }}>
                   <option value="">-- Pilih Akun --</option>
@@ -339,7 +339,7 @@ export default function App() {
           {/* REPORT */}
           {tab === 'report' && (
             <div>
-              <h2 style={{ fontSize: 16, fontWeight: 800, marginBottom: 16 }}>📈 Laporan Laba Rugi</h2>
+              <h2 style={{ fontSize: 16, fontWeight: 800, marginBottom: 16 }}>Laporan Laba Rugi</h2>
               <div style={{ background: 'white', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', maxWidth: 600 }}>
                 <div style={{ padding: '16px 20px', background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white' }}>
                   <h3 style={{ fontSize: 14, fontWeight: 800 }}>LAPORAN LABA RUGI</h3>
@@ -380,7 +380,7 @@ export default function App() {
           {/* COA */}
           {tab === 'coa' && (
             <div>
-              <h2 style={{ fontSize: 16, fontWeight: 800, marginBottom: 16 }}>🗂️ Chart of Accounts (Daftar Akun)</h2>
+              <h2 style={{ fontSize: 16, fontWeight: 800, marginBottom: 16 }}>Chart of Accounts (Daftar Akun)</h2>
               {['aset', 'kewajiban', 'modal', 'pendapatan', 'beban'].map(type => (
                 <div key={type} style={{ background: 'white', borderRadius: 12, overflow: 'hidden', marginBottom: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
                   <div style={{ padding: '10px 16px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -403,7 +403,7 @@ export default function App() {
         {modal && (
           <div onClick={e => e.target === e.currentTarget && setModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
             <div style={{ background: 'white', borderRadius: 16, padding: 24, width: '100%', maxWidth: 560, maxHeight: '90vh', overflow: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
-              <h2 style={{ fontSize: 16, fontWeight: 800, marginBottom: 16 }}>📝 Entri Jurnal Baru</h2>
+              <h2 style={{ fontSize: 16, fontWeight: 800, marginBottom: 16 }}>Entri Jurnal Baru</h2>
               <form onSubmit={addJournalEntry}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
                   <div>
@@ -435,10 +435,10 @@ export default function App() {
                           </select>
                         </td>
                         <td style={{ padding: 4 }}>
-                          <input type="number" value={line.debit} onChange={e => { const l = [...jLines]; l[i].debit = e.target.value; if (e.target.value) l[i].credit = ''; setJLines(l); }} placeholder="0" style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 12, textAlign: 'right', background: '#f8fafc' }} />
+                          <input type="number" value={line.debit} onChange={e => { const l = [...jLines]; l[i].debit = e.target.value; setJLines(l); }} placeholder="0" style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 12, textAlign: 'right', background: '#f8fafc' }} />
                         </td>
                         <td style={{ padding: 4 }}>
-                          <input type="number" value={line.credit} onChange={e => { const l = [...jLines]; l[i].credit = e.target.value; if (e.target.value) l[i].debit = ''; setJLines(l); }} placeholder="0" style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 12, textAlign: 'right', background: '#f8fafc' }} />
+                          <input type="number" value={line.credit} onChange={e => { const l = [...jLines]; l[i].credit = e.target.value; setJLines(l); }} placeholder="0" style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1.5px solid #e2e8f0', fontSize: 12, textAlign: 'right', background: '#f8fafc' }} />
                         </td>
                         <td style={{ padding: 4 }}>
                           <button type="button" onClick={() => removeLine(i)} style={{ background: '#fef2f2', border: 'none', borderRadius: 6, padding: '6px 10px', cursor: 'pointer', fontSize: 12, color: '#ef4444' }}>✕</button>
