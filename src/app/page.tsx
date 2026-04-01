@@ -57,6 +57,7 @@ export default function App() {
 
   const [payId, setPayId] = useState<number | null>(null);
   const [payAmount, setPayAmount] = useState('');
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   useEffect(() => {
     setJournal(load<JournalEntry[]>('journal', []));
@@ -146,11 +147,11 @@ export default function App() {
 
   return (
     <>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');*{margin:0;padding:0;box-sizing:border-box}@keyframes spin{to{transform:rotate(360deg)}}@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}body{font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased;background:#f0f2f5;color:#1e293b}input,select{-webkit-appearance:none}table{border-collapse:collapse}@media(min-width:768px){.sb{display:flex!important}.bn{display:none!important}.mh{display:none!important}.dh{display:flex!important}.ct{margin-left:220px!important;max-width:none!important;padding:24px!important}}`}</style>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');*{margin:0;padding:0;box-sizing:border-box}@keyframes spin{to{transform:rotate(360deg)}}@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}body{font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased;background:#f0f2f5;color:#1e293b}input,select{-webkit-appearance:none}@media(min-width:768px){.sb{display:flex!important}.bn{display:none!important}.mh{display:none!important}.dh{display:flex!important}.ct{margin-left:220px!important;max-width:none!important;padding:24px!important}.sb-hidden{display:none!important}.ct-slim{margin-left:0!important}}`}</style>
       <div style={{ minHeight: '100vh', background: '#f0f2f5', fontFamily: "'Inter', system-ui, sans-serif", paddingBottom: 72 }}>
 
         {/* Sidebar (Desktop) */}
-        <div className="sb" style={{ display: 'none', width: 220, background: '#1e1b4b', color: 'white', flexDirection: 'column', flexShrink: 0, position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 40 }}>
+        <div className={`sb${sidebarOpen ? '' : ' sb-hidden'}`} style={{ display: 'none', width: 220, background: '#1e1b4b', color: 'white', flexDirection: 'column', flexShrink: 0, position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 40, transition: 'all 0.3s' }}>
           <div style={{ padding: '24px 20px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{ width: 36, height: 36, background: 'linear-gradient(135deg, #818cf8, #6366f1)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 16, boxShadow: '0 2px 8px rgba(99,102,241,0.4)' }}>A</div>
             <div><div style={{ fontWeight: 800, fontSize: 16, letterSpacing: '-0.3px' }}>ARIS</div><div style={{ fontSize: 9, color: '#a5b4fc', letterSpacing: '1px', fontWeight: 500 }}>AKUNTANSI</div></div>
@@ -191,10 +192,15 @@ export default function App() {
         </header>
 
         {/* Desktop Header */}
-        <header className="dh" style={{ display: 'none', background: 'white', padding: '0 24px', borderBottom: '1px solid #e2e8f0', justifyContent: 'space-between', alignItems: 'center', height: 56 }}>
-          <div>
-            <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 500, marginBottom: 2 }}>Akuntansi</div>
-            <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1e293b' }}>{({ home: 'Dashboard', journal: 'Jurnal Umum', neraca: 'Neraca Saldo', laporan: 'Laporan Laba Rugi', hutang: 'Hutang & Piutang' } as Record<string, string>)[tab]}</h2>
+        <header className={`dh${sidebarOpen ? '' : ' ct-slim'}`} style={{ display: 'none', background: 'white', padding: '0 24px', borderBottom: '1px solid #e2e8f0', justifyContent: 'space-between', alignItems: 'center', height: 56 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ background: 'none', border: '1px solid #e2e8f0', borderRadius: 8, padding: '6px', cursor: 'pointer', color: '#64748b', display: 'flex', alignItems: 'center' }}>
+              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
+            </button>
+            <div>
+              <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 500, marginBottom: 2 }}>Akuntansi</div>
+              <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1e293b' }}>{({ home: 'Dashboard', journal: 'Jurnal Umum', neraca: 'Neraca Saldo', laporan: 'Laporan Laba Rugi', hutang: 'Hutang & Piutang' } as Record<string, string>)[tab]}</h2>
+            </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <div style={{ fontSize: 12, color: '#94a3b8' }}>{new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</div>
@@ -202,7 +208,7 @@ export default function App() {
           </div>
         </header>
 
-        <main className="ct" style={{ padding: 16 }}>
+        <main className={`ct${sidebarOpen ? '' : ' ct-slim'}`} style={{ padding: 16 }}>
           {/* HOME */}
           {tab === 'home' && <div>
             {/* KPI Cards */}
