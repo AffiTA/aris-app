@@ -98,6 +98,11 @@ export default function App() {
   const totalKew = kewajiban.reduce((s, a) => s + a.bal, 0);
   const totalModal = modalAcc.reduce((s, a) => s + a.bal, 0) + laba;
 
+  // Debug: log balances
+  console.log('Journal entries:', journal.length);
+  console.log('COA accounts:', coa.map(a => a.name));
+  console.log('Sample balances:', coa.slice(0, 5).map(a => ({ name: a.name, bal: getBal(a.name) })));
+
   const neracaSaldo = coa.map(a => ({ ...a, debit: getBal(a.name) > 0 ? getBal(a.name) : 0, credit: getBal(a.name) < 0 ? Math.abs(getBal(a.name)) : 0 })).filter(a => a.debit > 0 || a.credit > 0);
   const totalDebit = neracaSaldo.reduce((s, a) => s + a.debit, 0);
   const totalCredit = neracaSaldo.reduce((s, a) => s + a.credit, 0);
@@ -203,7 +208,7 @@ export default function App() {
           </div>
           <nav style={{ padding: '12px 8px' }}>
             {navItems.map(n => (
-              <button key={n.tab} onClick={() => setTab(n.tab)} style={{ width: '100%', textAlign: 'left', background: tab === n.tab ? '#1f2937' : 'transparent', color: tab === n.tab ? 'white' : '#9ca3af', border: 'none', borderRadius: 8, padding: '10px 12px', cursor: 'pointer', fontSize: 13, fontWeight: tab === n.tab ? 600 : 400, marginBottom: 2, transition: 'all 0.2s' }}>
+              <button key={n.tab} onClick={() => { setTab(n.tab); setJournal(load<JournalEntry[]>('journal', [])); setDebts(load<Debt[]>('debts', [])); }} style={{ width: '100%', textAlign: 'left', background: tab === n.tab ? '#1f2937' : 'transparent', color: tab === n.tab ? 'white' : '#9ca3af', border: 'none', borderRadius: 8, padding: '10px 12px', cursor: 'pointer', fontSize: 13, fontWeight: tab === n.tab ? 600 : 400, marginBottom: 2, transition: 'all 0.2s' }}>
                 {n.label}
               </button>
             ))}
